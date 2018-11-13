@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Box, Button, Heading, Text, TextField } from 'gestalt'
+import { Container, Box, Button, Heading, Text, TextField } from 'gestalt';
 import { setToken } from '../utils';
 import ToastMessage from './ToastMessage';
 import Strapi from 'strapi-sdk-javascript/build/main';
@@ -58,6 +58,7 @@ class Signup extends React.Component {
             this.setState({ toast: false, toastMessage: '' })
         }, 5000);
     }
+    
     render() {
         const { toastMessage, toast, loading } = this.state;
 
