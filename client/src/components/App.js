@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Loader from './Loader';
 import './App.css';
 import Strapi from 'strapi-sdk-javascript/build/main';
+import _ from 'lodash';
 const apiUrl = process.env.API_URL || 'http://localhost:1337';
 const strapi = new Strapi(apiUrl);
 
@@ -39,18 +40,45 @@ class App extends Component {
   }
 
   handleChange = ({ value }) => {
-    this.setState({ searchTerm: value });
+    this.setState({ searchTerm: value }, () => this.debounceSearchBrands());
   }
 
-  filteredbrands = ({ brands, searchTerm }) => {
-    return brands.filter(brand => {
-        return brand.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        brand.description.toLowerCase().includes(searchTerm.toLowerCase());
-    })
+  // filteredbrands = ({ brands, searchTerm }) => {
+  //   return brands.filter(brand => {
+  //       return brand.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  //       brand.description.toLowerCase().includes(searchTerm.toLowerCase());
+  //   })
+  // }
+
+  searchBrands = async () => {
+    const response = await strapi.request('POST', '/graphql', {
+      data: {
+        query: `query {
+          brands(where: {
+            name_contains: "${this.state.searchTerm}"
+          }) {
+            _id
+            name
+            description
+            image {
+              url
+            }
+          }
+        }`
+      }
+    });
+
+    console.log(this.state.searchTerm, response.data.brands);
+    this.setState({
+      brands: response.data.brands,
+      loadingBrands: false
+    });
   }
+
+  debounceSearchBrands = _.debounce(this.searchBrands, 300);
 
   render() {
-    const { searchTerm, loadingBrands } = this.state;
+    const { searchTerm, loadingBrands, brands } = this.state;
     return (
       <Container>
         {/* Brands Search Field */}
@@ -93,7 +121,7 @@ class App extends Component {
             wrap 
             display="flex" 
             justifyContent="around" >
-            {this.filteredbrands(this.state).map(brand => (
+            {brands.map(brand => (
                 <Box paddingY={4} margin={2} width={200} key={brand._id}>
                 <Card
                     image={
